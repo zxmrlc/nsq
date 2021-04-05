@@ -12,6 +12,7 @@ import (
 	"github.com/nsqio/nsq/internal/version"
 )
 
+//一系列接口http 及pprof接口
 type httpServer struct {
 	ctx    *Context
 	router http.Handler

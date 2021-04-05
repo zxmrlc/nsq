@@ -17,10 +17,13 @@ import (
 	"github.com/nsqio/nsq/internal/version"
 )
 
+//真正的tcp首发消息的处理者
 type LookupProtocolV1 struct {
 	ctx *Context
 }
 
+//初始化一个client
+//接收到的数据 按行读取 然后分割作为参数 call handle func
 func (p *LookupProtocolV1) IOLoop(conn net.Conn) error {
 	var err error
 	var line string
@@ -80,12 +83,13 @@ func (p *LookupProtocolV1) IOLoop(conn net.Conn) error {
 	return err
 }
 
+//实际调度的分派函数
 func (p *LookupProtocolV1) Exec(client *ClientV1, reader *bufio.Reader, params []string) ([]byte, error) {
 	switch params[0] {
 	case "PING":
-		return p.PING(client, params)
+		return p.PING(client, params) // 更新最后一次心跳时间
 	case "IDENTIFY":
-		return p.IDENTIFY(client, reader, params[1:])
+		return p.IDENTIFY(client, reader, params[1:]) // 身份认证?初始化?
 	case "REGISTER":
 		return p.REGISTER(client, reader, params[1:])
 	case "UNREGISTER":

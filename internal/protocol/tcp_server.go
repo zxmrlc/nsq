@@ -21,6 +21,7 @@ func TCPServer(listener net.Listener, handler TCPHandler, logf lg.AppLogFunc) er
 		if err != nil {
 			if nerr, ok := err.(net.Error); ok && nerr.Temporary() {
 				logf(lg.WARN, "temporary Accept() failure - %s", err)
+				//让出cpu时间片
 				runtime.Gosched()
 				continue
 			}

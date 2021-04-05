@@ -17,6 +17,7 @@ func (p *tcpServer) Handle(clientConn net.Conn) {
 	// The client should initialize itself by sending a 4 byte sequence indicating
 	// the version of the protocol that it intends to communicate, this will allow us
 	// to gracefully upgrade the protocol away from text/line oriented to whatever...
+	// 四字节的版本标识
 	buf := make([]byte, 4)
 	_, err := io.ReadFull(clientConn, buf)
 	if err != nil {
@@ -24,11 +25,13 @@ func (p *tcpServer) Handle(clientConn net.Conn) {
 		clientConn.Close()
 		return
 	}
+	//协议魔数
 	protocolMagic := string(buf)
 
 	p.ctx.nsqlookupd.logf(LOG_INFO, "CLIENT(%s): desired protocol magic '%s'",
 		clientConn.RemoteAddr(), protocolMagic)
 
+	//目前支持V1
 	var prot protocol.Protocol
 	switch protocolMagic {
 	case "  V1":

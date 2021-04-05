@@ -20,7 +20,7 @@ type Registration struct {
 type Registrations []Registration
 
 type PeerInfo struct {
-	lastUpdate       int64
+	lastUpdate       int64 //最后一次访问的时间
 	id               string
 	RemoteAddress    string `json:"remote_address"`
 	Hostname         string `json:"hostname"`
