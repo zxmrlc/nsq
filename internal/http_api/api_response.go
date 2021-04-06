@@ -104,6 +104,7 @@ func RespondV1(w http.ResponseWriter, code int, data interface{}) {
 	w.Write(response)
 }
 
+//装饰器,用来装饰APIHandler
 func Decorate(f APIHandler, ds ...Decorator) httprouter.Handle {
 	decorated := f
 	for _, decorate := range ds {
@@ -114,6 +115,7 @@ func Decorate(f APIHandler, ds ...Decorator) httprouter.Handle {
 	}
 }
 
+//获取logf返回装饰器
 func Log(logf lg.AppLogFunc) Decorator {
 	return func(f APIHandler) APIHandler {
 		return func(w http.ResponseWriter, req *http.Request, ps httprouter.Params) (interface{}, error) {
@@ -131,27 +133,40 @@ func Log(logf lg.AppLogFunc) Decorator {
 	}
 }
 
+//把下面的结构稍微剥离下比较好懂些
+//下面几个函数写法比较恶心,Decorate中传递的是APIHandler及不定参数Decorator
+//第一个参数是APIHandler 不定参数处理函数Decorator(在APIHandler上套娃,本质上还是APIHandler的封装)
+//封装上log打印req相关的内容及err处理的V1函数
 func LogPanicHandler(logf lg.AppLogFunc) func(w http.ResponseWriter, req *http.Request, p interface{}) {
 	return func(w http.ResponseWriter, req *http.Request, p interface{}) {
 		logf(lg.ERROR, "panic in HTTP handler - %s", p)
-		Decorate(func(w http.ResponseWriter, req *http.Request, ps httprouter.Params) (interface{}, error) {
-			return nil, Err{500, "INTERNAL_ERROR"}
-		}, Log(logf), V1)(w, req, nil)
+		Decorate(
+			func(w http.ResponseWriter, req *http.Request, ps httprouter.Params) (interface{}, error) {
+				return nil, Err{500, "INTERNAL_ERROR"}
+			},
+			Log(logf), V1,
+		)(w, req, nil)
 	}
 }
 
 func LogNotFoundHandler(logf lg.AppLogFunc) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		Decorate(func(w http.ResponseWriter, req *http.Request, ps httprouter.Params) (interface{}, error) {
-			return nil, Err{404, "NOT_FOUND"}
-		}, Log(logf), V1)(w, req, nil)
-	})
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, req *http.Request) {
+			Decorate(
+				func(w http.ResponseWriter, req *http.Request, ps httprouter.Params) (interface{}, error) {
+					return nil, Err{404, "NOT_FOUND"}
+				}, Log(logf), V1,
+			)(w, req, nil)
+		})
 }
 
 func LogMethodNotAllowedHandler(logf lg.AppLogFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		Decorate(func(w http.ResponseWriter, req *http.Request, ps httprouter.Params) (interface{}, error) {
-			return nil, Err{405, "METHOD_NOT_ALLOWED"}
-		}, Log(logf), V1)(w, req, nil)
+		Decorate(
+			func(w http.ResponseWriter, req *http.Request, ps httprouter.Params) (interface{}, error) {
+				return nil, Err{405, "METHOD_NOT_ALLOWED"}
+			},
+			Log(logf), V1,
+		)(w, req, nil)
 	})
 }

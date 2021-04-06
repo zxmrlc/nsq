@@ -50,6 +50,7 @@ func New(opts *Options) (*NSQLookupd, error) {
 // Main starts an instance of nsqlookupd and returns an
 // error if there was a problem starting up.
 //启动http服务(0.0.0.0:4161)和tcp服务(0.0.0.0:4160)
+//广播地址(C02Z35NNLVCF)
 //对应的handler文件为http.go和tcp.go
 func (l *NSQLookupd) Main() error {
 	ctx := &Context{l}

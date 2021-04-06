@@ -13,9 +13,9 @@ type RegistrationDB struct {
 }
 
 type Registration struct {
-	Category string
-	Key      string
-	SubKey   string
+	Category string //类型 channel topic
+	Key      string // topic
+	SubKey   string // channel
 }
 type Registrations []Registration
 

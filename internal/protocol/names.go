@@ -4,6 +4,7 @@ import (
 	"regexp"
 )
 
+//#ephemeral后缀的应该是个特殊的topic
 var validTopicChannelNameRegex = regexp.MustCompile(`^[\.a-zA-Z0-9_-]+(#ephemeral)?$`)
 
 // IsValidTopicName checks a topic name for correctness

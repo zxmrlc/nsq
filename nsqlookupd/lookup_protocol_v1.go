@@ -91,13 +91,14 @@ func (p *LookupProtocolV1) Exec(client *ClientV1, reader *bufio.Reader, params [
 	case "IDENTIFY":
 		return p.IDENTIFY(client, reader, params[1:]) // 身份认证?初始化?
 	case "REGISTER":
-		return p.REGISTER(client, reader, params[1:])
+		return p.REGISTER(client, reader, params[1:]) // register topic channel
 	case "UNREGISTER":
-		return p.UNREGISTER(client, reader, params[1:])
+		return p.UNREGISTER(client, reader, params[1:]) // unregister
 	}
 	return nil, protocol.NewFatalClientErr(nil, "E_INVALID", fmt.Sprintf("invalid command %s", params[0]))
 }
 
+//校验参数并获取
 func getTopicChan(command string, params []string) (string, string, error) {
 	if len(params) == 0 {
 		return "", "", protocol.NewFatalClientErr(nil, "E_INVALID", fmt.Sprintf("%s insufficient number of params", command))
@@ -120,6 +121,7 @@ func getTopicChan(command string, params []string) (string, string, error) {
 	return topicName, channelName, nil
 }
 
+// AddProducer channel类型及topic类型
 func (p *LookupProtocolV1) REGISTER(client *ClientV1, reader *bufio.Reader, params []string) ([]byte, error) {
 	if client.peerInfo == nil {
 		return nil, protocol.NewFatalClientErr(nil, "E_INVALID", "client must IDENTIFY")
@@ -201,13 +203,14 @@ func (p *LookupProtocolV1) IDENTIFY(client *ClientV1, reader *bufio.Reader, para
 	if client.peerInfo != nil {
 		return nil, protocol.NewFatalClientErr(err, "E_INVALID", "cannot IDENTIFY again")
 	}
-
+	//数据流头部read一个int32的数据长度 4字节
 	var bodyLen int32
 	err = binary.Read(reader, binary.BigEndian, &bodyLen)
 	if err != nil {
 		return nil, protocol.NewFatalClientErr(err, "E_BAD_BODY", "IDENTIFY failed to read body size")
 	}
 
+	//peerInfo的json串
 	body := make([]byte, bodyLen)
 	_, err = io.ReadFull(reader, body)
 	if err != nil {
@@ -233,11 +236,13 @@ func (p *LookupProtocolV1) IDENTIFY(client *ClientV1, reader *bufio.Reader, para
 	p.ctx.nsqlookupd.logf(LOG_INFO, "CLIENT(%s): IDENTIFY Address:%s TCP:%d HTTP:%d Version:%s",
 		client, peerInfo.BroadcastAddress, peerInfo.TCPPort, peerInfo.HTTPPort, peerInfo.Version)
 
+	//注册信息
 	client.peerInfo = &peerInfo
 	if p.ctx.nsqlookupd.DB.AddProducer(Registration{"client", "", ""}, &Producer{peerInfo: client.peerInfo}) {
 		p.ctx.nsqlookupd.logf(LOG_INFO, "DB: client(%s) REGISTER category:%s key:%s subkey:%s", client, "client", "", "")
 	}
 
+	//返回版本号 端口等东西
 	// build a response
 	data := make(map[string]interface{})
 	data["tcp_port"] = p.ctx.nsqlookupd.RealTCPAddr().Port

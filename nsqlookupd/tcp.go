@@ -11,6 +11,7 @@ type tcpServer struct {
 	ctx *Context
 }
 
+//对client的链接进行处理
 func (p *tcpServer) Handle(clientConn net.Conn) {
 	p.ctx.nsqlookupd.logf(LOG_INFO, "TCP: new client(%s)", clientConn.RemoteAddr())
 

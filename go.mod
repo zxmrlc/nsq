@@ -1,7 +1,5 @@
 module github.com/nsqio/nsq
 
-go 1.15
-
 require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/bitly/go-hostpool v0.0.0-20171023180738-a3a6125de932

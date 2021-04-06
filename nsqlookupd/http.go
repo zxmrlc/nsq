@@ -22,7 +22,7 @@ func newHTTPServer(ctx *Context) *httpServer {
 	log := http_api.Log(ctx.nsqlookupd.logf)
 
 	router := httprouter.New()
-	router.HandleMethodNotAllowed = true
+	router.HandleMethodNotAllowed = true //返回405
 	router.PanicHandler = http_api.LogPanicHandler(ctx.nsqlookupd.logf)
 	router.NotFound = http_api.LogNotFoundHandler(ctx.nsqlookupd.logf)
 	router.MethodNotAllowed = http_api.LogMethodNotAllowedHandler(ctx.nsqlookupd.logf)

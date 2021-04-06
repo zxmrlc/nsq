@@ -4,6 +4,7 @@ import (
 	"net"
 )
 
+//client 包含net 链接及具体信息
 type ClientV1 struct {
 	net.Conn
 	peerInfo *PeerInfo
