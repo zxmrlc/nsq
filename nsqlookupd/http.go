@@ -18,6 +18,7 @@ type httpServer struct {
 	router http.Handler
 }
 
+//TODO 后面再阅读这些业务逻辑
 func newHTTPServer(ctx *Context) *httpServer {
 	log := http_api.Log(ctx.nsqlookupd.logf)
 
@@ -31,9 +32,11 @@ func newHTTPServer(ctx *Context) *httpServer {
 		router: router,
 	}
 
+	//连通性及info
 	router.Handle("GET", "/ping", http_api.Decorate(s.pingHandler, log, http_api.PlainText))
 	router.Handle("GET", "/info", http_api.Decorate(s.doInfo, log, http_api.V1))
 
+	//获取状态的一些信息
 	// v1 negotiate
 	router.Handle("GET", "/debug", http_api.Decorate(s.doDebug, log, http_api.V1))
 	router.Handle("GET", "/lookup", http_api.Decorate(s.doLookup, log, http_api.V1))
@@ -41,6 +44,7 @@ func newHTTPServer(ctx *Context) *httpServer {
 	router.Handle("GET", "/channels", http_api.Decorate(s.doChannels, log, http_api.V1))
 	router.Handle("GET", "/nodes", http_api.Decorate(s.doNodes, log, http_api.V1))
 
+	//对topic/channel的curd
 	// only v1
 	router.Handle("POST", "/topic/create", http_api.Decorate(s.doCreateTopic, log, http_api.V1))
 	router.Handle("POST", "/topic/delete", http_api.Decorate(s.doDeleteTopic, log, http_api.V1))
@@ -48,6 +52,7 @@ func newHTTPServer(ctx *Context) *httpServer {
 	router.Handle("POST", "/channel/delete", http_api.Decorate(s.doDeleteChannel, log, http_api.V1))
 	router.Handle("POST", "/topic/tombstone", http_api.Decorate(s.doTombstoneTopicProducer, log, http_api.V1))
 
+	//pprof的一些接口,通过网页直接访问实例状况
 	// debug
 	router.HandlerFunc("GET", "/debug/pprof", pprof.Index)
 	router.HandlerFunc("GET", "/debug/pprof/cmdline", pprof.Cmdline)
