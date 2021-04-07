@@ -48,6 +48,7 @@ func connectCallback(n *NSQD, hostname string) func(*lookupPeer) {
 			}
 		}
 
+		//把上次退出的也通过command注册上
 		// build all the commands first so we exit the lock(s) as fast as possible
 		var commands []*nsq.Command
 		n.RLock()
@@ -106,6 +107,7 @@ func (n *NSQD) lookupLoop() {
 		}
 
 		select {
+		//发送心跳
 		case <-ticker:
 			// send a heartbeat and read a response (read detects closed conns)
 			for _, lookupPeer := range lookupPeers {
@@ -116,6 +118,7 @@ func (n *NSQD) lookupLoop() {
 					n.logf(LOG_ERROR, "LOOKUPD(%s): %s - %s", lookupPeer, cmd, err)
 				}
 			}
+		//对topic和channel的注册及取消注册
 		case val := <-n.notifyChan:
 			var cmd *nsq.Command
 			var branch string
@@ -172,6 +175,7 @@ exit:
 	n.logf(LOG_INFO, "LOOKUP: closing")
 }
 
+// s in string list
 func in(s string, lst []string) bool {
 	for _, v := range lst {
 		if s == v {

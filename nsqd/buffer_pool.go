@@ -5,6 +5,7 @@ import (
 	"sync"
 )
 
+//真的是个buffer pool!
 var bp sync.Pool
 
 func init() {

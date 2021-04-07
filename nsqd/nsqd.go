@@ -247,6 +247,7 @@ func (n *NSQD) Main() error {
 	exitCh := make(chan error)
 	var once sync.Once
 	exitFunc := func(err error) {
+		//这个exitFunc 很有意思,获取一个err就return
 		once.Do(func() {
 			if err != nil {
 				n.logf(LOG_FATAL, "%s", err)
@@ -582,6 +583,7 @@ func (n *NSQD) channels() []*Channel {
 	return channels
 }
 
+//调整worker池的协程数目
 // resizePool adjusts the size of the pool of queueScanWorker goroutines
 //
 // 	1 <= pool <= min(num * 0.25, QueueScanWorkerPoolMax)
@@ -610,6 +612,7 @@ func (n *NSQD) resizePool(num int, workCh chan *Channel, responseCh chan bool, c
 	}
 }
 
+//真正的worker协程
 // queueScanWorker receives work (in the form of a channel) from queueScanLoop
 // and processes the deferred and in-flight queues
 func (n *NSQD) queueScanWorker(workCh chan *Channel, responseCh chan bool, closeCh chan int) {
@@ -631,6 +634,12 @@ func (n *NSQD) queueScanWorker(workCh chan *Channel, responseCh chan bool, close
 	}
 }
 
+//单线程处理进行中和延迟的优点队列,worker池(默认四个)同时处理channel
+//复制了redis的概率过期算法.一定间隔时间(默认100ms),从本地缓存列表随机选择(默认20个)channel,刷新间隔(默认5s)
+//TODO 没看懂为什么这么做
+//如果没有处理完的channel被认为是dirty
+//当选择的数量的dirty占比大于一定值(默认25%),则本次不休眠
+//休眠间隔一定小于休眠配置间隔
 // queueScanLoop runs in a single goroutine to process in-flight and deferred
 // priority queues. It manages a pool of queueScanWorker (configurable max of
 // QueueScanWorkerPoolMax (default: 4)) that process channels concurrently.
@@ -649,9 +658,11 @@ func (n *NSQD) queueScanLoop() {
 	responseCh := make(chan bool, n.getOpts().QueueScanSelectionCount)
 	closeCh := make(chan int)
 
+	//周期性定时器
 	workTicker := time.NewTicker(n.getOpts().QueueScanInterval)
 	refreshTicker := time.NewTicker(n.getOpts().QueueScanRefreshInterval)
 
+	//初始化调整为所有的channels
 	channels := n.channels()
 	n.resizePool(len(channels), workCh, responseCh, closeCh)
 
@@ -687,7 +698,7 @@ func (n *NSQD) queueScanLoop() {
 		}
 
 		if float64(numDirty)/float64(num) > n.getOpts().QueueScanDirtyPercent {
-			goto loop
+			goto loop //本次不休眠
 		}
 	}
 

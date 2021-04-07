@@ -1,5 +1,7 @@
 package nsqd
 
+//diskQueue,dummyBackendQueue实现了backendQueue接口。
+//dummyBackendQueue channel topic 都实现了这么一套接口
 // BackendQueue represents the behavior for the secondary message
 // storage system
 type BackendQueue interface {

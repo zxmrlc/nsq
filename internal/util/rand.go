@@ -4,6 +4,7 @@ import (
 	"math/rand"
 )
 
+//从0-(maxval-1)中随机挑选quantity个序号
 func UniqRands(quantity int, maxval int) []int {
 	if maxval < quantity {
 		quantity = maxval
